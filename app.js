@@ -8,8 +8,8 @@ const Axios = require('axios')
 //===============================using axios ------------------------
 
 //downloadImage('https://i.ibb.co/R4BB4DW/Captcha-Bajaj.jpg',"lena.png")      // number image
-//downloadImage('https://i.ibb.co/jTKYQqP/Captcha-United.png',"lena.png")     // alphabet image
-// https://i.stack.imgur.com/Bptns.png
+//downloadImage('https://i.ibb.co/jTKYQqP/Captcha-United.png',"lena.png")     // test this one for alphabet image
+// https://i.stack.imgur.com/Bptns.png  // test this one for number
 
 const express = require("express");
 const app = express();
