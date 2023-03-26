@@ -45,7 +45,6 @@ try {
             { logger: m => console.log(m) }
         ).then(({ data: { text } }) => {
             const filteredText = Array.from(text.matchAll(/\d/g)).join("")
-            console.log(filteredText)
             if(filteredText.length <=1){
                 alpha()
                 async function alpha(){
@@ -55,7 +54,6 @@ try {
                         await worker.initialize('eng+chi_tra');
                         const { data: { text } } = await worker.recognize('lena.png');
                         const tt = (text.trim()).split(" ").join("")
-                        console.log(tt);
                         return res.send({
                             output:tt
                         })
