@@ -1,13 +1,21 @@
-
-const ReadText = require('text-from-image')
+var Tesseract = require("tesseract.js")
+// const tesseract = require("node-tesseract")not working in my laptop
+// const ReadText = require('text-from-image')not working in my laptop
+// var textract = require("textract") not working in my laptop
+const { createWorker } = require('tesseract.js');
 const fs = require('fs');
 const Axios = require('axios')
 //===============================using axios ------------------------
 
-
+//downloadImage('https://i.ibb.co/R4BB4DW/Captcha-Bajaj.jpg',"lena.png")      // number image
+//downloadImage('https://i.ibb.co/jTKYQqP/Captcha-United.png',"lena.png")     // alphabet image
+// https://i.stack.imgur.com/Bptns.png
 
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 
 async function downloadImage(url, filepath) {
@@ -24,29 +32,45 @@ async function downloadImage(url, filepath) {
 }
 
 
+try {
+    app.post("/url", async (req, res) => {
+        const url = req.body.url
 
-try{
+        await downloadImage(url,'lena.png')
 
 
-app.get("/api/:url", async (req, res) => {
-
-    console.log(req.params.url,"url,")
-    console.log(req.url,"req")
-    // downloadImage('https://i.ibb.co/R4BB4DW/Captcha-Bajaj.jpg',"lena.png")      // number image
-    // downloadImage('https://i.ibb.co/jTKYQqP/Captcha-United.png',"lena.png")     // alphabet image
-    await downloadImage(`${req.params.url}`, 'lena.png')
-    ReadText('./lena.png').then(text => {
-        res.send({
-            input: text
+        Tesseract.recognize(
+            __dirname + '/lena.png',
+            'eng',
+            { logger: m => console.log(m) }
+        ).then(({ data: { text } }) => {
+            const filteredText = Array.from(text.matchAll(/\d/g)).join("")
+            console.log(filteredText)
+            if(filteredText.length <=1){
+                alpha()
+                async function alpha(){
+                    const worker = await createWorker();//alphabet
+                    (async () => {
+                        await worker.loadLanguage('eng+chi_tra');
+                        await worker.initialize('eng+chi_tra');
+                        const { data: { text } } = await worker.recognize('lena.png');
+                        const tt = (text.trim()).split(" ").join("")
+                        console.log(tt);
+                        return res.send({
+                            output:tt
+                        })
+                    })();
+                }
+            }else{
+                return res.send({
+                    output:filteredText
+                })
+            }
         })
-        console.log(res,"resss")
-    }).catch(err => {
-        console.log(err.message);
-    })
 
-})
-}catch(err){
-    console.log("errorr owheroheirhwoier",err.message)
+    })
+} catch (err) {
+    console.log("error", err.message)
 }
 
 
@@ -55,3 +79,49 @@ const PORT = 8000
 app.listen(PORT, () => {
     console.log("Server started at Port :", PORT)
 })
+
+
+// res.send({
+//     input:text
+//   })
+
+
+// number ---------------------------
+// const { createWorker } = require('tesseract.js');
+
+// const worker = await createWorker();
+
+// (async () => {
+//   await worker.loadLanguage('eng');
+//   await worker.initialize('eng');
+//   await worker.setParameters({
+//     tessedit_char_whitelist: '0123456789',
+//   });
+//   const { data: { text } } = await worker.recognize('https://tesseract.projectnaptha.com/img/eng_bw.png');
+//   console.log(text);
+//   await worker.terminate();
+// })();
+
+// \n at last with alphabet ------
+// const worker = await createWorker();
+
+// (async () => {
+//   await worker.loadLanguage('eng+chi_tra');
+//   await worker.initialize('eng+chi_tra');
+//   const { data: { text } } = await worker.recognize('./lena.png');
+//   console.log(text);
+//   res.send({
+//     output : text
+//   })
+//   await worker.terminate();
+// })();
+
+//----- number for png  coorect
+// Tesseract.recognize(
+//     __dirname + '/lena.png',
+//     'eng',
+//     { logger: m => console.log(m) }
+// ).then(({ data: { text } }) => {
+//     const filteredText = Array.from(text.matchAll(/\d/g)).join("")
+//     console.log(filteredText)
+// })
